@@ -1,12 +1,9 @@
 "use client";
 import React from "react";
-import { useThemeStore } from "@/store";
 import { DirectionProvider as RadixDirectionProvider } from "@radix-ui/react-direction";
 
-const DirectionProvider = ({ children, lang }: { children: React.ReactNode; lang: string }) => {
-  const { isRtl } = useThemeStore();
-
-  const direction = lang === "fa" ||  isRtl  ? "rtl" : "ltr";
+const DirectionProvider = ({ children }: { children: React.ReactNode; lang: string }) => {
+  const direction = "rtl";
 
   return (
     <div dir={direction}>
