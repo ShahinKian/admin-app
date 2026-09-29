@@ -1,44 +1,40 @@
 import { NextResponse } from "next/server";
-import { match } from "@formatjs/intl-localematcher";
-import Negotiator from "negotiator";
 
 const defaultLocale = "fa";
 const locales = ["fa", "en"];
 
-// Get the preferred locale, similar to above or using a library
-function getLocale(request: Request) {
-  const acceptedLanguage = request.headers.get("accept-language") ?? undefined;
-  const headers = { "accept-language": acceptedLanguage };
-  const languages = new Negotiator({ headers }).languages();
-
-  return match(languages, locales, defaultLocale); // -> 'en-US'
-}
-
 export function proxy(request: any) {
-  // Check if there is any supported locale in the pathname
-  const pathname = request.nextUrl.pathname;
+  const { pathname } = request.nextUrl;
 
-  const pathnameIsMissingLocale = locales.every(
-    (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
-  );
+  // The root and locale landing pages are entry points, not dashboards.
+  if (pathname === "/" || locales.includes(pathname.slice(1))) {
+    const hasSessionCookie =
+      request.cookies.has("__Secure-next-auth.session-token") ||
+      request.cookies.has("next-auth.session-token");
 
-  // Redirect if there is no locale
-  if (pathnameIsMissingLocale) {
-    const locale = getLocale(request);
-
-    // e.g. incoming request is /products
-    // The new URL is now /en-US/products
     return NextResponse.redirect(
-      new URL(`/${locale}/${pathname}`, request.url)
+      new URL(
+        hasSessionCookie ? "/fa/dashboard" : "/fa/auth/login",
+        request.url
+      )
     );
   }
+
+  const hasLocale = locales.some(
+    (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`)
+  );
+
+  // Routes without a locale use Persian as the default.
+  if (!hasLocale) {
+    const localizedPath = pathname === "/" ? "" : pathname;
+    return NextResponse.redirect(
+      new URL(`/${defaultLocale}${localizedPath}${request.nextUrl.search}`, request.url)
+    );
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    // Skip all internal paths (_next, assets, api)
-    //"/((?!api|assets|.*\\..*|_next).*)",
-    "/((?!api|assets|docs|.*\\..*|_next).*)",
-    // Optional: only run on root (/) URL
-  ],
+  matcher: ["/((?!api|assets|docs|.*\\..*|_next).*)"],
 };
