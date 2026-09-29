@@ -25,7 +25,7 @@ export default async function RootLayout({ children, params }: {
 }) {
   const { lang } = await params;
   return (
-    <html lang={lang} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang={lang} dir="rtl" data-scroll-behavior="smooth" suppressHydrationWarning>
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       <body className="dash-tail-app" suppressHydrationWarning>
       <AuthProvider>
